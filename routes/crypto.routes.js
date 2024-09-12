@@ -2,59 +2,37 @@ const router = require("express").Router()
 const apiKey = process.env.apiKey;
 
 router.get('/:from_currency-:to_currency', async (req, res) => {
-    const from_currency = req.params.from_currency;
-    const to_currency = req.params.to_currency;
+    const { from_currency, to_currency } = req.params
 
     try {
-        // Fetch the matching stock symbols from Alpha Vantage
         const response = await fetch(`https://www.alphavantage.co/query?function=CURRENCY_EXCHANGE_RATE&from_currency=${from_currency}&to_currency=${to_currency}&apikey=${apiKey}`);
-        const data = await response.json();  // Parse the response as JSON
-        res.json(data);  // Send the search results to the client
+        const data = await response.json();
+        res.json(data);
     } catch (error) {
-        res.status(500).json({ error: 'Error fetching data from Alpha Vantage' });  // Handle errors
+        res.status(500).json({ error: 'Error fetching data from Alpha Vantage' });
     }
 });
 
-router.get('/daily/:symbol-:market', async (req, res) => {
-    const symbol = req.params.symbol;
-    const market = req.params.market;
+const fetchData = async (timeFrame, symbol, market, apiKey) => {
+    const url = `https://www.alphavantage.co/query?function=DIGITAL_CURRENCY_${timeFrame.toUpperCase()}&symbol=${symbol}&market=${market}&apikey=${apiKey}`;
+    const response = await fetch(url);
+    return response.json();
+};
+
+// Route for fetching cryptocurrency data
+router.get('/:timeFrame/:symbol-:market', async (req, res) => {
+    const { timeFrame, symbol, market } = req.params;
+
+    const validTimeFrames = ['daily', 'weekly', 'monthly'];
+    if (!validTimeFrames.includes(timeFrame)) {
+        return res.status(400).json({ error: 'Invalid time frame. Use daily, weekly, or monthly.' });
+    }
 
     try {
-        // Fetch the matching stock symbols from Alpha Vantage
-        const response = await fetch(`https://www.alphavantage.co/query?function=DIGITAL_CURRENCY_DAILY&symbol=${symbol}&market=${market}&apikey=${apiKey}`);
-        const data = await response.json();  // Parse the response as JSON
-        res.json(data);  // Send the search results to the client
+        const data = await fetchData(timeFrame, symbol, market, apiKey);
+        res.json(data);
     } catch (error) {
-        res.status(500).json({ error: 'Error fetching data from Alpha Vantage' });  // Handle errors
+        res.status(500).json({ error: 'Error fetching data from Alpha Vantage' });
     }
 });
-
-router.get('/weekly/:symbol-:market', async (req, res) => {
-    const symbol = req.params.symbol;
-    const market = req.params.market;
-
-    try {
-        // Fetch the matching stock symbols from Alpha Vantage
-        const response = await fetch(`https://www.alphavantage.co/query?function=DIGITAL_CURRENCY_WEEKLY&symbol=${symbol}&market=${market}&apikey=${apiKey}`);
-        const data = await response.json();  // Parse the response as JSON
-        res.json(data);  // Send the search results to the client
-    } catch (error) {
-        res.status(500).json({ error: 'Error fetching data from Alpha Vantage' });  // Handle errors
-    }
-});
-
-router.get('/monthly/:symbol-:market', async (req, res) => {
-    const symbol = req.params.symbol;
-    const market = req.params.market;
-
-    try {
-        // Fetch the matching stock symbols from Alpha Vantage
-        const response = await fetch(`https://www.alphavantage.co/query?function=DIGITAL_CURRENCY_MONTHLY&symbol=${symbol}&market=${market}&apikey=${apiKey}`);
-        const data = await response.json();  // Parse the response as JSON
-        res.json(data);  // Send the search results to the client
-    } catch (error) {
-        res.status(500).json({ error: 'Error fetching data from Alpha Vantage' });  // Handle errors
-    }
-});
-
 module.exports = router;

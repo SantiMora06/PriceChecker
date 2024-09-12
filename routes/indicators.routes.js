@@ -1,141 +1,94 @@
 const router = require("express").Router()
 const apiKey = process.env.apiKey;
 
-router.get("/GDP/:interval", async (req, res) => {
-    const interval = req.params.interval
+// Constants for validation
+const validFunctionType = {
+    "gdp": "REAL_GDP",
+    "gpd-usa": "REAL_GDP_PER_CAPITA",
+    "inflation": "INFLATION",
+    "retail-sales": "RETAIL_SALES",
+    "durables": "DURABLES",
+    "unemployment": "UNEMPLOYMENT",
+    "non-farm-payroll": "NONFARM_PAYROLL"
+};
+const validInterval = ["daily", "weekly", "monthly"];
+const valid2Interval = ["annual", "quarterly"];
+const validMaturity = ["3month", "2year", "5year", "7year", "10year", "30year"];
 
-    const validInterval = ["annual", "quarterly"]
-    if (!validInterval.includes(interval)) {
-        return res.status(500).json({ error: "Invalid input, please use annual or quarterly" })
-    }
-
+// Helper function to fetch data from Alpha Vantage
+const fetchData = async (functionType, params, res) => {
     try {
-        const response = await fetch(`https://www.alphavantage.co/query?function=REAL_GDP&interval=${interval}&apikey=${apiKey}`)
+        const urlParams = new URLSearchParams({ apikey: apiKey, ...params });
+        const url = `https://www.alphavantage.co/query?function=${functionType}&${urlParams.toString()}`;
+        const response = await fetch(url);
         const data = await response.json();
-        res.json(data)
+        res.json(data);
     } catch (error) {
-        res.status(500).json({ error: "Error fetching data from Alpha Vantage" })
+        res.status(500).json({ error: "Error fetching data from Alpha Vantage" });
     }
+};
+
+// Route handler for GDP and related functions
+router.get("/GDP/:interval", (req, res) => {
+    const { interval } = req.params;
+
+    if (!valid2Interval.includes(interval)) {
+        return res.status(400).json({ error: "Invalid input, please use annual or quarterly" });
+    }
+
+    fetchData("REAL_GDP", { interval }, res);
 });
 
-
-router.get("/GDP-USA", async (req, res) => {
-
-    try {
-        const response = await fetch(`https://www.alphavantage.co/query?function=REAL_GDP_PER_CAPITA&apikey=${apiKey}`)
-        const data = await response.json();
-        res.json(data)
-    } catch (error) {
-        res.status(500).json({ error: "Error fetching data from Alpha Vantage" })
-    }
+router.get("/GDP-USA", (req, res) => {
+    fetchData("REAL_GDP_PER_CAPITA", {}, res);
 });
 
-router.get("/treasury-yield/:interval/:maturity", async (req, res) => {
-    const interval = req.params.interval
-    const maturity = req.params.maturity
+// Route handler for treasury yield
+router.get("/treasury-yield/:interval/:maturity", (req, res) => {
+    const { interval, maturity } = req.params;
 
-    const validInterval = ["daily", "weekly", "monthly"]
     if (!validInterval.includes(interval)) {
-        return res.status(500).json({ error: "Invalid input, please use annual or quarterly" })
+        return res.status(400).json({ error: "Invalid interval, use daily, weekly, or monthly" });
     }
 
-    const validMaturity = ["3month", "2year", "5year", "7year", "10year", "30year"]
     if (!validMaturity.includes(maturity)) {
-        return res.status(500).json({ error: "Invalid input, please use annual or quarterly" })
+        return res.status(400).json({ error: "Invalid maturity, use 3month, 2year, 5year, 7year, 10year, or 30year" });
     }
 
-    try {
-        const response = await fetch(`https://www.alphavantage.co/query?function=TREASURY_YIELD&interval=${interval}&maturity=${maturity}&apikey=${apiKey}`)
-        const data = await response.json();
-        res.json(data)
-    } catch (error) {
-        res.status(500).json({ error: "Error fetching data from Alpha Vantage" })
-    }
+    fetchData("TREASURY_YIELD", { interval, maturity }, res);
 });
 
-router.get("/federal-funds-rate/:interval", async (req, res) => {
-    const interval = req.params.interval
+// Route handler for federal funds rate
+router.get("/federal-funds-rate/:interval", (req, res) => {
+    const { interval } = req.params;
 
-    const validInterval = ["daily", "weekly", "monthly"]
     if (!validInterval.includes(interval)) {
-        return res.status(500).json({ error: "Invalid input, please use annual or quarterly" })
+        return res.status(400).json({ error: "Invalid interval, use daily, weekly, or monthly" });
     }
 
-    try {
-        const response = await fetch(`https://www.alphavantage.co/query?function=FEDERAL_FUNDS_RATE&interval=${interval}&apikey=${apiKey}`)
-        const data = await response.json();
-        res.json(data)
-    } catch (error) {
-        res.status(500).json({ error: "Error fetching data from Alpha Vantage" })
-    }
+    fetchData("FEDERAL_FUNDS_RATE", { interval }, res);
 });
 
-router.get("/cpi/:interval", async (req, res) => {
-    const interval = req.params.interval
-
-    const validInterval = ["daily", "weekly", "monthly"];
+// Route handler for CPI
+router.get("/cpi/:interval", (req, res) => {
+    const { interval } = req.params;
 
     if (!validInterval.includes(interval)) {
-        return res.status.json({ error: "Invalid input, please use daily, weekly or monthly" })
+        return res.status(400).json({ error: "Invalid interval, use daily, weekly, or monthly" });
     }
 
-    try {
-        const response = await fetch(`https://www.alphavantage.co/query?function=CPI&interval=${interval}&apikey=${apiKey}`)
-        const data = await response.json()
-        res.json(data)
-    } catch (error) {
-        res.status(500).json({ error: "Error fetching data from Alpha Vantage" })
-    }
-})
+    fetchData("CPI", { interval }, res);
+});
 
-router.get("/inflation", async (req, res) => {
-    try {
-        const response = await fetch(`https://www.alphavantage.co/query?function=INFLATION&apikey=${apiKey}`)
-        const data = await response.json()
-        res.json(data)
-    } catch (error) {
-        res.status(500).json({ error: "Error fetching data from Alpha Vantage" })
-    }
-})
+// General route handler for economic indicators
+router.get("/:indicator", (req, res) => {
+    const { indicator } = req.params;
 
-router.get("/retail-sales", async (req, res) => {
-    try {
-        const response = await fetch(`https://www.alphavantage.co/query?function=REATIL_SALES&apikey=${apiKey}`)
-        const data = await response.json()
-        res.json(data)
-    } catch (error) {
-        res.status(500).json({ error: "Error fetching data from Alpha Vantage" })
+    if (!validFunctionType[indicator]) {
+        return res.status(400).json({ error: "Invalid indicator" });
     }
-})
 
-router.get("/durables", async (req, res) => {
-    try {
-        const response = await fetch(`https://www.alphavantage.co/query?function=DURABLES&apikey=${apiKey}`)
-        const data = await response.json()
-        res.json(data)
-    } catch (error) {
-        res.status(500).json({ error: "Error fetching data from Alpha Vantage" })
-    }
-})
-
-router.get("/unemployment", async (req, res) => {
-    try {
-        const response = await fetch(`https://www.alphavantage.co/query?function=UNEMPLOYMENT&apikey=${apiKey}`)
-        const data = await response.json()
-        res.json(data)
-    } catch (error) {
-        res.status(500).json({ error: "Error fetching data from Alpha Vantage" })
-    }
-})
-
-router.get("/non-farm-payroll", async (req, res) => {
-    try {
-        const response = await fetch(`https://www.alphavantage.co/query?function=NONFARM_PAYROLL&apikey=${apiKey}`)
-        const data = await response.json()
-        res.json(data)
-    } catch (error) {
-        res.status(500).json({ error: "Error fetching data from Alpha Vantage" })
-    }
-})
+    fetchData(validFunctionType[indicator], {}, res);
+});
 
 module.exports = router;
