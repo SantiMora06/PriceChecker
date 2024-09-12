@@ -17,10 +17,11 @@ const validTechnicalIndicators = {
 const isValidInterval = (interval) => validInterval.includes(interval)
 const isValidSeriesType = (seriesType) => validSeriesType.includes(seriesType)
 const isValidFunctionType = (functionType) => validTechnicalIndicators.hasOwnProperty(functionType)
+const isValidTimePeriod = (timePeriod) => !isNaN(timePeriod) && Number.isInteger(Number(timePeriod)) && timePeriod > 0;
 
-router.get(("/:functionType/:symbol/:interval/:seriesType"), async (req, res) => {
+router.get(("/:functionType/:symbol/:interval/:timePeriod/:seriesType"), async (req, res) => {
 
-    const { symbol, interval, seriesType, functionType } = req.params;
+    const { functionType, symbol, interval, timePeriod, seriesType } = req.params;
 
     // Validate the interval
     if (!isValidInterval(interval)) {
@@ -37,8 +38,12 @@ router.get(("/:functionType/:symbol/:interval/:seriesType"), async (req, res) =>
         return res.status(400).json({ error: "Invalid function type" })
     }
 
+    if (!isValidTimePeriod(timePeriod)) {
+        return res.status(400).json({ error: "Invalid input, must be positive an integer" })
+    }
+
     try { // Fetch the data from the Alpha Advantage API
-        const response = await fetch(`https://www.alphavantage.co/query?function=${technicalIndicatorsFunction}&symbol=${symbol}&interval=${interval}&series_type=${seriesType}&apikey=${apiKey}`)
+        const response = await fetch(`https://www.alphavantage.co/query?function=${technicalIndicatorsFunction}&symbol=${symbol}&interval=${interval}&time_period=${timePeriod}&series_type=${seriesType}&apikey=${apiKey}`)
         const data = await response.json()
         // Check if the data has been sent correctly
         if (data["Error Message"]) {
