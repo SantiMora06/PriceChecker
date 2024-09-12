@@ -70,4 +70,72 @@ router.get("/federal-funds-rate/:interval", async (req, res) => {
     }
 });
 
+router.get("/cpi/:interval", async (req, res) => {
+    const interval = req.params.interval
+
+    const validInterval = ["daily", "weekly", "monthly"];
+
+    if (!validInterval.includes(interval)) {
+        return res.status.json({ error: "Invalid input, please use daily, weekly or monthly" })
+    }
+
+    try {
+        const response = await fetch(`https://www.alphavantage.co/query?function=CPI&interval=${interval}&apikey=${apiKey}`)
+        const data = await response.json()
+        res.json(data)
+    } catch (error) {
+        res.status(500).json({ error: "Error fetching data from Alpha Vantage" })
+    }
+})
+
+router.get("/inflation", async (req, res) => {
+    try {
+        const response = await fetch(`https://www.alphavantage.co/query?function=INFLATION&apikey=${apiKey}`)
+        const data = await response.json()
+        res.json(data)
+    } catch (error) {
+        res.status(500).json({ error: "Error fetching data from Alpha Vantage" })
+    }
+})
+
+router.get("/retail-sales", async (req, res) => {
+    try {
+        const response = await fetch(`https://www.alphavantage.co/query?function=REATIL_SALES&apikey=${apiKey}`)
+        const data = await response.json()
+        res.json(data)
+    } catch (error) {
+        res.status(500).json({ error: "Error fetching data from Alpha Vantage" })
+    }
+})
+
+router.get("/durables", async (req, res) => {
+    try {
+        const response = await fetch(`https://www.alphavantage.co/query?function=DURABLES&apikey=${apiKey}`)
+        const data = await response.json()
+        res.json(data)
+    } catch (error) {
+        res.status(500).json({ error: "Error fetching data from Alpha Vantage" })
+    }
+})
+
+router.get("/unemployment", async (req, res) => {
+    try {
+        const response = await fetch(`https://www.alphavantage.co/query?function=UNEMPLOYMENT&apikey=${apiKey}`)
+        const data = await response.json()
+        res.json(data)
+    } catch (error) {
+        res.status(500).json({ error: "Error fetching data from Alpha Vantage" })
+    }
+})
+
+router.get("/non-farm-payroll", async (req, res) => {
+    try {
+        const response = await fetch(`https://www.alphavantage.co/query?function=NONFARM_PAYROLL&apikey=${apiKey}`)
+        const data = await response.json()
+        res.json(data)
+    } catch (error) {
+        res.status(500).json({ error: "Error fetching data from Alpha Vantage" })
+    }
+})
+
 module.exports = router;

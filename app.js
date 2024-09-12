@@ -24,6 +24,9 @@ app.use('/crypto', cryptoRoutes)
 const indicatorsRoutes = require('./routes/indicators.routes')
 app.use('/indicators', indicatorsRoutes)
 
+const commoditiesRoutes = require('./routes/commodities.routes')
+app.use('/commodities', commoditiesRoutes)
+
 // ❗ To handle errors. Routes that don't exist or errors that you handle in specific routes
 require('./error-handling')(app)
 

@@ -1,5 +1,3 @@
-const { json } = require("express");
-
 const router = require("express").Router()
 const apiKey = 'UKYI48QGI96XRW9G';
 
