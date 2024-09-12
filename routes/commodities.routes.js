@@ -3,7 +3,7 @@ const { json } = require("express");
 const router = require("express").Router()
 const apiKey = 'UKYI48QGI96XRW9G';
 
-router.get("/price/crude-oil-wti", async (req, res) => {
+router.get("/price/crude-oil-wti/:interval", async (req, res) => {
     const interval = req.params.interval
 
     const validInterval = ["daily", "weekly", "monthly"]
@@ -20,7 +20,7 @@ router.get("/price/crude-oil-wti", async (req, res) => {
     }
 });
 
-router.get("/price/crude-oil-brent", async (req, res) => {
+router.get("/price/crude-oil-brent/:interval", async (req, res) => {
     const interval = req.params.interval
 
     const validInterval = ["daily", "weekly", "monthly"]
@@ -37,7 +37,7 @@ router.get("/price/crude-oil-brent", async (req, res) => {
     }
 });
 
-router.get("/price/natural-gas", async (req, res) => {
+router.get("/price/natural-gas/:interval", async (req, res) => {
     const interval = req.params.interval
 
     const validInterval = ["daily", "weekly", "monthly"]
@@ -54,7 +54,7 @@ router.get("/price/natural-gas", async (req, res) => {
     }
 });
 
-router.get("/price/copper", async (req, res) => {
+router.get("/price/copper/:interval", async (req, res) => {
     const interval = req.params.interval
 
     const validInterval = ["daily", "weekly", "monthly"]
@@ -71,7 +71,7 @@ router.get("/price/copper", async (req, res) => {
     }
 });
 
-router.get("/price/aluminium", async (req, res) => {
+router.get("/price/aluminium/:interval", async (req, res) => {
     const interval = req.params.interval
 
     const validInterval = ["daily", "weekly", "monthly"]
@@ -88,7 +88,7 @@ router.get("/price/aluminium", async (req, res) => {
     }
 });
 
-router.get("/price/wheat", async (req, res) => {
+router.get("/price/wheat/:interval", async (req, res) => {
     const interval = req.params.interval
 
     const validInterval = ["daily", "weekly", "monthly"]
@@ -105,7 +105,7 @@ router.get("/price/wheat", async (req, res) => {
     }
 });
 
-router.get("/price/sugar", async (req, res) => {
+router.get("/price/sugar/:interval", async (req, res) => {
     const interval = req.params.interval
 
     const validInterval = ["daily", "weekly", "monthly"]
@@ -122,7 +122,7 @@ router.get("/price/sugar", async (req, res) => {
     }
 });
 
-router.get("/price/cotton", async (req, res) => {
+router.get("/price/cotton/:interval", async (req, res) => {
     const interval = req.params.interval
 
     const validInterval = ["daily", "weekly", "monthly"]
@@ -139,7 +139,7 @@ router.get("/price/cotton", async (req, res) => {
     }
 });
 
-router.get("/price/corn", async (req, res) => {
+router.get("/price/corn/:interval", async (req, res) => {
     const interval = req.params.interval
 
     const validInterval = ["daily", "weekly", "monthly"]
@@ -156,7 +156,7 @@ router.get("/price/corn", async (req, res) => {
     }
 });
 
-router.get("/price/coffee", async (req, res) => {
+router.get("/price/coffee/:interval", async (req, res) => {
     const interval = req.params.interval
 
     const validInterval = ["daily", "weekly", "monthly"]
@@ -173,7 +173,7 @@ router.get("/price/coffee", async (req, res) => {
     }
 });
 
-router.get("/price/all", async (req, res) => {
+router.get("/price/all/:interval", async (req, res) => {
     const interval = req.params.interval
 
     const validInterval = ["daily", "weekly", "monthly"]
