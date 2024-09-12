@@ -1,5 +1,5 @@
 const router = require("express").Router()
-const apiKey = 'UKYI48QGI96XRW9G';
+const apiKey = process.env.apiKey;
 
 router.get("/GDP/:interval", async (req, res) => {
     const interval = req.params.interval

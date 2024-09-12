@@ -1,5 +1,5 @@
 const router = require("express").Router()
-const apiKey = 'UKYI48QGI96XRW9G';
+const apiKey = process.env.apiKey;
 
 // Get daily stock
 

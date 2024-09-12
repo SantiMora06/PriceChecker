@@ -1,5 +1,5 @@
 const router = require("express").Router()
-const apiKey = 'UKYI48QGI96XRW9G';
+const apiKey = process.env.apiKey;
 
 router.get('/:from_currency-:to_currency', async (req, res) => {
     const from_currency = req.params.from_currency;
