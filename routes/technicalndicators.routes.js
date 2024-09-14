@@ -1,6 +1,8 @@
 const router = require("express").Router()
 const apiKey = process.env.apiKey;
 
+// Creamos unos arrays con todos los seriesType, Interval y TechnicalIndicators;
+
 const validSeriesType = ["close", "open", "high", "low"];
 const validInterval = ["1min", "5min", "15min", "30min", "60min", "daily", "weekly", "monthly"]
 const validTechnicalIndicators = {
@@ -13,7 +15,7 @@ const validTechnicalIndicators = {
     "ad": "AD", "adosc": "ADOSC", "obv": "OBV", "ht-trendline": "HT_TRENDLINE", "ht-sine": "HT_SINE",
     "ht-trendmode": "HT_TRENDMODE", "ht-dcperiod": "HT_CDPERIOD", "ht-dcphase": "HT_DCPHASE", "ht-phasor": "HT_PHASOR"
 }
-// We add in here helper functions for validation
+// Añadimos unas funciones para ayudar a la validación;
 const isValidInterval = (interval) => validInterval.includes(interval)
 const isValidSeriesType = (seriesType) => validSeriesType.includes(seriesType)
 const isValidFunctionType = (functionType) => validTechnicalIndicators.hasOwnProperty(functionType)
@@ -23,35 +25,35 @@ router.get(("/:functionType/:symbol/:interval/:timePeriod/:seriesType"), async (
 
     const { functionType, symbol, interval, timePeriod, seriesType } = req.params;
 
-    // Validate the interval
+    // Validamos el interval
     if (!isValidInterval(interval)) {
         res.status(400).json({ error: "Input not valid, use 1min, 5min, 15min, 30min, 60min, daily, weekly, monthly" })
     }
 
-    // Validate the seriesType
+    // Validamos el seriesType
     if (!isValidSeriesType(seriesType)) {
         res.status(400).json({ error: "Input not valid, use close, open, high, low" })
     }
-    // Validate the functionType
+    // Validamos la functionType
     const technicalIndicatorsFunction = validTechnicalIndicators[functionType];
     if (!technicalIndicatorsFunction) {
         return res.status(400).json({ error: "Invalid function type" })
     }
-
+    // Validamos el timePeriod
     if (!isValidTimePeriod(timePeriod)) {
         return res.status(400).json({ error: "Invalid input, must be positive an integer" })
     }
 
-    try { // Fetch the data from the Alpha Advantage API
+    try { // Pedimos los datos a la API de Alpha Advantage
         const response = await fetch(`https://www.alphavantage.co/query?function=${technicalIndicatorsFunction}&symbol=${symbol}&interval=${interval}&time_period=${timePeriod}&series_type=${seriesType}&apikey=${apiKey}`)
         const data = await response.json()
-        // Check if the data has been sent correctly
+        // Comprobamos si el envío fue correcto
         if (data["Error Message"]) {
             return res.status(500).json({ error: data["Error Message"] })
         }
         res.json(data)
     } catch (error) {
-        // Catch general errors
+        // Comprobamos errores generales
         res.status(500).json({ error: "Error fetching data from Alpha Vantage" })
     }
 })

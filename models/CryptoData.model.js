@@ -1,20 +1,28 @@
 const { model, Schema } = require('mongoose');
 
-const HistoricalDataSchema = new Schema({
+const cryptoSchema = new Schema({
     symbol: {
         type: String,
         required: true,
         unique: true
     },
+    market: {
+        type: String,
+        required: true
+    },
+    timeFrame: {
+        type: String,
+        required: true
+    },
     data: {
         type: Object,
         required: true
     },
-    lastUpdated: {
+    updatedAt: {
         type: Date,
         default: Date.now
     }
 });
 
-const HistoricalData = model('HistoricalData', HistoricalDataSchema)
-module.exports = HistoricalData;
+const Crypto = model('Crypto', cryptoSchema)
+module.exports = Crypto;

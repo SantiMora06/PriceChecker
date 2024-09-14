@@ -1,94 +1,80 @@
 const router = require("express").Router()
-const apiKey = process.env.apiKey;
+const Indicators = require("../models/Indicators.model")
+const cacheMiddleware = require("../middleware/cache.middleware");
+const { fetchFromAlphaVantage } = require("../helpers/fetchHelper")
 
-// Constants for validation
-const validFunctionType = {
-    "gdp": "REAL_GDP",
-    "gpd-usa": "REAL_GDP_PER_CAPITA",
-    "inflation": "INFLATION",
-    "retail-sales": "RETAIL_SALES",
-    "durables": "DURABLES",
-    "unemployment": "UNEMPLOYMENT",
-    "non-farm-payroll": "NONFARM_PAYROLL"
-};
-const validInterval = ["daily", "weekly", "monthly"];
-const valid2Interval = ["annual", "quarterly"];
-const validMaturity = ["3month", "2year", "5year", "7year", "10year", "30year"];
-
-// Helper function to fetch data from Alpha Vantage
-const fetchData = async (functionType, params, res) => {
-    try {
-        const urlParams = new URLSearchParams({ apikey: apiKey, ...params });
-        const url = `https://www.alphavantage.co/query?function=${functionType}&${urlParams.toString()}`;
-        const response = await fetch(url);
-        const data = await response.json();
-        res.json(data);
-    } catch (error) {
-        res.status(500).json({ error: "Error fetching data from Alpha Vantage" });
-    }
-};
+const getSymbolParams = req => {
+    const { symbol } = req.params;
+    return { symbol }
+}
 
 // Route handler for GDP and related functions
-router.get("/GDP/:interval", (req, res) => {
-    const { interval } = req.params;
+router.get("/GDP/:interval", cacheMiddleware(Indicators, "REAL_GDP", getSymbolParams), async (req, res) => {
 
-    if (!valid2Interval.includes(interval)) {
-        return res.status(400).json({ error: "Invalid input, please use annual or quarterly" });
+    try {
+        const data = await fetchFromAlphaVantage("REAL_GDP", req.apiParams);
+        res.json(data)
+    } catch (error) {
+        res.status(500).json({ error: error.message })
     }
-
-    fetchData("REAL_GDP", { interval }, res);
 });
 
-router.get("/GDP-USA", (req, res) => {
-    fetchData("REAL_GDP_PER_CAPITA", {}, res);
+router.get("/GDP-USA", cacheMiddleware(Indicators, "REAL_GDP_PER_CAPITA", getSymbolParams), async (req, res) => {
+    try {
+        const data = await fetchFromAlphaVantage("REAL_GDP_PER_CAPITA", req.apiParams);
+        res.json(data)
+    } catch (error) {
+        res.status(500).json({ error: error.message })
+    }
+
 });
 
 // Route handler for treasury yield
-router.get("/treasury-yield/:interval/:maturity", (req, res) => {
-    const { interval, maturity } = req.params;
-
-    if (!validInterval.includes(interval)) {
-        return res.status(400).json({ error: "Invalid interval, use daily, weekly, or monthly" });
+router.get("/treasury-yield/:interval/:maturity", cacheMiddleware(Indicators, "TREASURY_YIELD", getSymbolParams), async (req, res) => {
+    try {
+        const data = await fetchFromAlphaVantage("TREASURY_YIELD", req.apiParams);
+        res.json(data)
+    } catch (error) {
+        res.status(500).json({ error: error.message })
     }
-
-    if (!validMaturity.includes(maturity)) {
-        return res.status(400).json({ error: "Invalid maturity, use 3month, 2year, 5year, 7year, 10year, or 30year" });
-    }
-
-    fetchData("TREASURY_YIELD", { interval, maturity }, res);
 });
 
 // Route handler for federal funds rate
-router.get("/federal-funds-rate/:interval", (req, res) => {
-    const { interval } = req.params;
+router.get("/federal-funds-rate/:interval", cacheMiddleware(Indicators, "FEDERAL_FUNDS_RATE", getSymbolParams), async (req, res) => {
 
-    if (!validInterval.includes(interval)) {
-        return res.status(400).json({ error: "Invalid interval, use daily, weekly, or monthly" });
+    try {
+        const data = await fetchFromAlphaVantage("FEDERAL_FUNDS_RATE", req.apiParams);
+        res.json(data)
+    } catch (error) {
+        res.status(500).json({ error: error.message })
     }
 
-    fetchData("FEDERAL_FUNDS_RATE", { interval }, res);
 });
 
 // Route handler for CPI
-router.get("/cpi/:interval", (req, res) => {
-    const { interval } = req.params;
+router.get("/cpi/:interval", cacheMiddleware(Indicators, "CPI", getSymbolParams), async (req, res) => {
 
-    if (!validInterval.includes(interval)) {
-        return res.status(400).json({ error: "Invalid interval, use daily, weekly, or monthly" });
+    try {
+        const data = await fetchFromAlphaVantage("INFLATION", req.apiParams);
+        res.json(data)
+    } catch (error) {
+        res.status(500).json({ error: error.message })
     }
-
-    fetchData("CPI", { interval }, res);
 });
 
 // General route handler for economic indicators
-router.get("/:indicator", (req, res) => {
-    const { indicator } = req.params;
+router.get("/inflation", cacheMiddleware(Indicators, "INFLATION", getSymbolParams), async (req, res) => {
 
-    if (!validFunctionType[indicator]) {
-        return res.status(400).json({ error: "Invalid indicator" });
+    try {
+        const data = await fetchFromAlphaVantage("INFLATION", req.apiParams);
+        res.json(data)
+    } catch (error) {
+        res.status(500).json({ error: error.message })
     }
-
-    fetchData(validFunctionType[indicator], {}, res);
 });
+
+
+
+
 
 module.exports = router;
