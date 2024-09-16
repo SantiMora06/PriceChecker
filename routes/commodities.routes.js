@@ -1,6 +1,9 @@
 const router = require("express").Router()
 const apiKey = process.env.apiKey;
 
+// Creamos dos arrays, uno para los intervalos de tiempo y otro para los commodities. En commodities creamos varios objetos con propiedades que se añadiran a la url
+// Y el functionType correspondiente.
+
 const validInterval = ["daily", "weekly", "monthly"];
 const validCommodities = {
     "crude-oil-wti": "WTI",
@@ -16,27 +19,28 @@ const validCommodities = {
     "all": "ALL_COMMODITIES"
 };
 
-// We create a dymanic route for commodities
+// Creamos una ruta dinámica para las commodities
 router.get("/price/:commodity/:interval", async (req, res) => {
+    // Necesitamos los parámetros de commodity y de interval que serán añadidos a la url.
     const { commodity, interval } = req.params;
 
-    // We need to validate the interval
+    // Necesitamos verificar que el interval incluye los validInterval.
     if (!validInterval.includes(interval)) {
         return res.status(400).json({ error: "Invalid interval. Please use daily, weekly, or monthly." });
     }
 
-    // We need to also validate the commodity selected
+    // Necesitamos verificar que el commodity incluye los validCommodities.
     const commodityFunction = validCommodities[commodity];
     if (!commodityFunction) {
         return res.status(400).json({ error: "Invalid commodity. Please provide a valid commodity type." });
     }
 
     try {
-        // In here we make the fetch request with dynamic parameters such as commodityFunction, interval and apiKey
+        // Aquí hacemos la petición de fetch con parámetros dinámicos como commodityFunction, interval y apiKey
         const response = await fetch(`https://www.alphavantage.co/query?function=${commodityFunction}&interval=${interval}&apikey=${apiKey}`);
         const data = await response.json();
 
-        // Send the data to the client
+        // Enviamos los datos 
         res.json(data);
     } catch (error) {
         res.status(500).json({ error: "Error fetching data from Alpha Vantage." });
