@@ -1,5 +1,6 @@
 const router = require("express").Router()
 const apiKey = process.env.apiKey;
+const TechnicalIndicators = require("../models/TechnicalIndicators.model")
 
 // Creamos unos arrays con todos los seriesType, Interval y TechnicalIndicators;
 
@@ -45,12 +46,31 @@ router.get(("/:functionType/:symbol/:interval/:timePeriod/:seriesType"), async (
     }
 
     try { // Pedimos los datos a la API de Alpha Advantage
+
+        const cacheData = await TechnicalIndicators.findOne({
+            functionType: technicalIndicatorsFunction,
+            symbol, interval, timePeriod, seriesType
+        });
+
+        const oneDay = 24 * 60 * 60 * 1000;
+        const now = new Date();
+
+        if (cacheData && now - cacheData.updatedAt < oneDay) {
+            return res.json(cacheData.data)
+        }
+
         const response = await fetch(`https://www.alphavantage.co/query?function=${technicalIndicatorsFunction}&symbol=${symbol}&interval=${interval}&time_period=${timePeriod}&series_type=${seriesType}&apikey=${apiKey}`)
         const data = await response.json()
         // Comprobamos si el envío fue correcto
         if (data["Error Message"]) {
             return res.status(500).json({ error: data["Error Message"] })
         }
+
+        await TechnicalIndicators.findOneAndUpdate(
+            { functionType },
+            { data, updatedAt: new Date() },
+            { upsert: true, new: true }
+        )
         res.json(data)
     } catch (error) {
         // Comprobamos errores generales

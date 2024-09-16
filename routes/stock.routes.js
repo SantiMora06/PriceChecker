@@ -107,10 +107,6 @@ router.get('/top-gainers', (req, res) => {
     handleAlphaVantageRequest(res, "TOP_GAINERS_LOSERS")
 });
 
-router.get('/ipo-calendar', (req, res) => {
-    handleAlphaVantageRequest(res, "IPO_CALENDAR")
-});
-
 router.get('/exchange-rate/:from_currency-:to_currency', async (req, res) => {
     const { from_currency, to_currency } = req.params;
     try {
