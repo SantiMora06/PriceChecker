@@ -37,7 +37,7 @@ A comprehensive Node.js application integrated with MongoDB Atlas, designed to f
 
 3. Install dependencies:
 
-- npm i express nodemon dotenv mongoose morgan cors cookie-parser
+- npm i express nodemon dotenv mongoose morgan cors cookie-parser bcryptjs jasonwebtoken
 
 4. Set up environment variables:
 
