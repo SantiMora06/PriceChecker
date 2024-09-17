@@ -1,15 +1,14 @@
 // Aquí creamos los métodos necesarios para registrar y verificar usuarios y admins
-
+const JWT_SECRET = process.env.JWT_SECRET
 const User = require("../models/User.model")
 const jwt = require("jsonwebtoken")
 
 /* Creamos una función para realizar el signup del user
 Pasamos user como parámetro y retornamos el token "firmado" con el id, role, el secreto y la fecha de expiración.
-
 */
 
 const signupToken = (user) => {
-    return jwt.sign({ id: user._id, role: user.role }, process.env.JTW_SECRET, { expiresIn: "1d" })
+    return jwt.sign({ id: user._id, role: user.role }, JWT_SECRET, { expiresIn: "1d" })
 }
 
 /* Como queremos exportar la siguiente función de registro, la hacemos async,
@@ -20,6 +19,12 @@ Igualmente, crearemos la variable token para guardar el token de signin del usua
 exports.register = async (req, res) => {
     try {
         const { username, email, password, role } = req.body;
+
+        const usuarioExistente = await User.findOne({ email })
+        if (usuarioExistente) {
+            return res.status(400).json({ error: 'Usuario existente' })
+        }
+
         const user = new User({ username, email, password, role })
         await user.save()
 

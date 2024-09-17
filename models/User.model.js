@@ -19,14 +19,6 @@ const userSchema = new Schema(
             type: String,
             required: true
         },
-        dateRegistered: {
-            type: Date,
-            default: Date.now
-        },
-        preferences: {
-            type: Array,
-            default: []
-        },
         role: {
             type: String,
             enum: ["user", "admin"],

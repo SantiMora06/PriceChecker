@@ -1,4 +1,5 @@
-const jtw = require('jsonwebtoken')
+const jwt = require('jsonwebtoken')
+const JWT_SECRET = process.env.JWT_SECRET
 
 exports.protect = (req, res, next) => {
 
@@ -21,7 +22,7 @@ exports.protect = (req, res, next) => {
     la información decodificada del token)
     */
 
-    jtw.verify(token, process.env.JTW_SECRET, (error, decoded) => {
+    jwt.verify(token, JWT_SECRET, (error, decoded) => {
         if (error) {
             return res.status(401).json({ error: 'Token inválido' })
         }

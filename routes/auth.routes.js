@@ -4,6 +4,10 @@ const { register, login } = require('../controllers/auth.controller')
 const { protect, adminOnly } = require('../middleware/auth.middleware')
 const router = require("express").Router()
 
+router.get("/", (req, res) => {
+    res.json("All good in auth")
+})
+
 router.post("/register", register);
 router.post("/login", login)
 router.get("/dashboard", protect, (req, res) => {
