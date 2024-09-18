@@ -15,25 +15,11 @@ require('./config')(app)
 const indexRoutes = require('./routes/index.routes')
 app.use('/api', indexRoutes)
 
-const stockRoutes = require('./routes/stock.routes')
-app.use('/stock', stockRoutes)
-
-const cryptoRoutes = require('./routes/crypto.routes')
-app.use('/crypto', cryptoRoutes)
-
-const indicatorsRoutes = require('./routes/indicators.routes')
-app.use('/indicators', indicatorsRoutes)
-
-const commoditiesRoutes = require('./routes/commodities.routes')
-app.use('/commodities', commoditiesRoutes)
-
-const technicalIndicatorsRoutes = require('./routes/technicalndicators.routes')
-app.use('/technical-indicators', technicalIndicatorsRoutes)
-
 const authRoutes = require("./routes/auth.routes")
 app.use('/auth', authRoutes)
 
-// ❗ To handle errors. Routes that don't exist or errors that you handle in specific routes
+
+// ❗ To handle errors. Routes that don't exit or errors that you handle in specific routes
 require('./error-handling')(app)
 
 module.exports = app

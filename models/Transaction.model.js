@@ -7,31 +7,26 @@ const TransactionSchema = new Schema({
         ref: 'User',
         required: true
     },
-    portfolioId: {
-        type: Schema.Types.ObjectId,
-        ref: 'Portfolio',
-        required: true
-    },
     symbol: {
         type: String,
-        required: true
-    },
-    transactionType: {
-        type: String,
-        enum: ['buy', 'sell'],
         required: true
     },
     amount: {
         type: Number,
         required: true
     },
-    price: {
-        type: Number,
-        required: true
+    status: {
+        type: String,
+        enum: ['pending', 'completed', "failed"],
+        required: true,
+        default: "pending"
     },
-    date: {
+    createdAt: {
         type: Date,
         default: Date.now
+    },
+    completedAt: {
+        type: Date,
     }
 });
 
