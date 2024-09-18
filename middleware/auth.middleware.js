@@ -1,39 +1,23 @@
 const jwt = require('jsonwebtoken')
-const JWT_SECRET = process.env.JWT_SECRET
+const secret = require("../config/secretGenerator")
+const User = require("../models/User.model")
 
-exports.protect = (req, res, next) => {
 
-    // El token viene desde el headers de authorization
+exports.isAthenticated = async (req, res, next) => {
 
-    const token = req.headers.authorization?.split(" ")[1];
-
-    if (!token) {
-        return res.status(401).json({ error: 'No autorizado, token no proporcionado' })
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+        return res.satus(401).json({ message: "Token no provisto" })
     }
+    const token = authHeader.split(" ")[1];
 
-    /* jtw.verify es una función de la librería jtw que verifica la validez 
-    del token y requiere 3 parámetros:
 
-    - El token que se desea verificar
-    - process.env.JWT_SECRET que es la clave secreta utilizada para firmar
-    el token.
-    - una callback function que se ejecuta tras intentar verificar el token
-    (Si el token es inválido o expiró => error, si el token es válido contendrá
-    la información decodificada del token)
-    */
-
-    jwt.verify(token, JWT_SECRET, (error, decoded) => {
+    jwt.verify(token, secret, (error, decoded) => {
         if (error) {
-            return res.status(401).json({ error: 'Token inválido' })
+            return res.status(401).json({ message: "Token inválido" })
         }
-        req.user = decoded; // Guardamos la información del usuario en req.user
-        next();
+        req.user = decoded
+        next()
     })
-}
 
-exports.adminOnly = (req, res, next) => {
-    if (req.user.role !== "admin") {
-        return res.status(403).json({ error: 'Acceso denegado, solo admins' })
-    }
-    next()
 }
