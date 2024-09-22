@@ -24,5 +24,8 @@ const cryptoSchema = new Schema({
     }
 });
 
+cryptoSchema.index({ symbol: 1, market: 1, timeFrame: 1 }, { unique: true })
+
+
 const Crypto = model('Crypto', cryptoSchema)
 module.exports = Crypto;

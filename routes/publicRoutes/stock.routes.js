@@ -1,6 +1,6 @@
 const router = require('express').Router();
 const apiKey = process.env.apiKey;
-const Stock = require("../models/Stock.model")
+const Stock = require("../../models/Stock.model")
 
 // Creamos una función que nos ayude a coger los datos desde la API de Alpha Vantage y centralizarlos. 
 
@@ -45,29 +45,36 @@ const createRouteHandler = (functionType) => async (req, res) => {
     const symbol = req.params.symbol || '';
     const params = symbol ? `symbol=${symbol}` : '';
 
+    console.log("Query params", { symbol, functionType });
+
     try {
         // Declaramos una variable que haga de caché. Espera y encuentra un Stock que tenga un símbolo y una función determinada.
         const cachedStock = await Stock.findOne({ symbol, functionType });
+        console.log("Cached Stock:", cachedStock)
 
         const oneDay = 24 * 60 * 60 * 1000;
         const now = new Date();
 
         // Si existe y fue actualizado en las últimas 24 horas, devolvemos el símbolo
         if (cachedStock && now - cachedStock.updatedAt < oneDay) {
+            console.log("Returning cached data for", { symbol, functionType })
             return res.json(cachedStock.data)
         }
 
         // Si no existe o fue consultado hace más de 24 horas, hacemos la petición a la API
         const data = await fetchFromAlphaVantage(functionType, params);
+        console.log("Fetched Data", data)
 
         // Guardamos o actualizamos el símbolo en la base de datos
-        await Stock.findOneAndUpdate(
-            { symbol },
+        const savedStock = await Stock.findOneAndUpdate(
+            { symbol, functionType },
             { data, updatedAt: new Date() },
             { upsert: true, new: true })
         //Devolvemos todos los datos actualizados
+        console.log("Saved Stock", savedStock)
         res.json(data);
     } catch (error) {
+        console.log("Error handling Alpha Vantage request:", error)
         res.status(500).json({ error: error.message });
     }
 };

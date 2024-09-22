@@ -1,6 +1,5 @@
 const jwt = require('jsonwebtoken')
 const secret = require("../config/secretGenerator")
-const User = require("../models/User.model")
 
 
 exports.isAthenticated = async (req, res, next) => {

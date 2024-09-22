@@ -61,7 +61,7 @@ http://localhost:3000
 
 ## API Usage
 
-**Available Routes:**
+**Available Routes:** "Add the remaining routes"
 
 - /api: Base route for the API.
 - /stock: Retrieve stock data.

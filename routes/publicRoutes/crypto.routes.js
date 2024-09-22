@@ -1,6 +1,6 @@
 const router = require("express").Router()
 const apiKey = process.env.apiKey;
-const Crypto = require("../models/CryptoData.model")
+const Crypto = require("../../models/CryptoData.model")
 
 
 const fetchData = async (timeFrame, symbol, market, apiKey) => {

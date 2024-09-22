@@ -1,6 +1,6 @@
 const router = require("express").Router()
 const apiKey = process.env.apiKey;
-const Commodities = require("../models/CommoditiesData.model")
+const Commodities = require("../../models/CommoditiesData.model")
 
 // Creamos dos arrays, uno para los intervalos de tiempo y otro para los commodities. En commodities creamos varios objetos con propiedades que se añadiran a la url
 // Y el functionType correspondiente.

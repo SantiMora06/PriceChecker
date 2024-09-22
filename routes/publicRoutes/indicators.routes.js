@@ -1,5 +1,5 @@
 const router = require("express").Router()
-const Indicators = require("../models/Indicators.model")
+const Indicators = require("../../models/Indicators.model")
 const apiKey = process.env.apiKey
 
 const validParams = {

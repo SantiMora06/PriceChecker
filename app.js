@@ -12,10 +12,10 @@ const app = express()
 require('./config')(app)
 
 // 👇 Start handling routes here
-const indexRoutes = require('./routes/index.routes')
+const indexRoutes = require('./routes/publicRoutes/index.routes')
 app.use('/api', indexRoutes)
 
-const authRoutes = require("./routes/auth.routes")
+const authRoutes = require("./routes/privateRoutes/auth.routes")
 app.use('/auth', authRoutes)
 
 

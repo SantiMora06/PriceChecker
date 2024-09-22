@@ -1,11 +1,11 @@
 // Antes de iniciar las rutas, tenemos que importar los métodos y middleware
-const isAdmin = require("../middleware/admin.middleware")
+const isAdmin = require("../../middleware/admin.middleware")
 const bcrypt = require("bcryptjs")
 const router = require("express").Router()
-const User = require("../models/User.model")
+const User = require("../../models/User.model")
 const jwt = require("jsonwebtoken")
-const secret = require("../config/secretGenerator")
-const { isAthenticated } = require("../middleware/auth.middleware")
+const secret = require("../../config/secretGenerator")
+const { isAthenticated } = require("../../middleware/auth.middleware")
 
 router.get("/", (req, res) => {
     res.json("All good in auth")

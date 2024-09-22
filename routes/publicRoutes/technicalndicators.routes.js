@@ -1,6 +1,6 @@
 const router = require("express").Router()
 const apiKey = process.env.apiKey;
-const TechnicalIndicators = require("../models/TechnicalIndicators.model")
+const TechnicalIndicators = require("../../models/TechnicalIndicators.model")
 
 // Creamos unos arrays con todos los seriesType, Interval y TechnicalIndicators;
 

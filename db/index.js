@@ -20,4 +20,15 @@ const withDB = async serverListener => {
   }
 }
 
+/* First we need to go to our DB, in my case MongoDB and open the shell:
+
+// Then let's go to the folder of your database:
+use name-of-your-db
+
+// Erase your actual index, in case you have one already, otherwise skip this step
+db.your_model_name.dropIndex({ property_name: 1 });
+
+// You need to create a composed index to take into consideration both properties at the same time:
+db.your_model_name.createIndex({ property_name: 1, property_name: 1 }, { unique: true });*/
+
 module.exports = withDB
