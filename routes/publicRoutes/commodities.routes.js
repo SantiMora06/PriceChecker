@@ -16,8 +16,7 @@ const validCommodities = {
     "sugar": "SUGAR",
     "cotton": "COTTON",
     "corn": "CORN",
-    "coffee": "COFFEE",
-    "all": "ALL_COMMODITIES"
+    "coffee": "COFFEE"
 };
 
 // Creamos una ruta dinámica para las commodities
@@ -77,39 +76,53 @@ router.get("/search", async (req, res) => {
     res.json(matchingCommodities);
 })
 
-router.get("/random-commodity", async (req, res) => {
+router.get("/random-commodities", async (req, res) => {
     try {
-        // Elegimos una commodity y un intervalo aleatorios
         const commodityKeys = Object.keys(validCommodities);
-        const randomCommodity = commodityKeys[Math.floor(Math.random() * commodityKeys.length)];
-        const interval = "daily"; // Puedes hacer esto aleatorio si lo prefieres
+        const selectedCommodities = new Set(); // Use a Set to ensure uniqueness
 
-        const commodityFunction = validCommodities[randomCommodity];
-
-        // Verificamos si hay datos en caché
-        const cachedData = await Commodities.findOne({ commodity: randomCommodity, interval });
-        const oneDay = 24 * 60 * 60 * 1000;
-        const now = new Date();
-
-        if (cachedData && now - cachedData.updatedAt < oneDay) {
-            return res.json({ commodity: randomCommodity, data: cachedData.data });
+        // Randomly select 5 unique commodities
+        while (selectedCommodities.size < 5) {
+            const randomCommodity = commodityKeys[Math.floor(Math.random() * commodityKeys.length)];
+            selectedCommodities.add(randomCommodity); // Set will ensure no duplicates
         }
 
-        // Hacemos la petición a la API externa
-        const response = await fetch(`https://www.alphavantage.co/query?function=${commodityFunction}&interval=${interval}&apikey=${apiKey}`);
-        const data = await response.json();
+        const interval = "daily"; // You can make this random if needed
+        const results = [];
 
-        // Guardamos en caché y enviamos la respuesta
-        await Commodities.findOneAndUpdate(
-            { commodity: randomCommodity, interval },
-            { data, updatedAt: new Date() },
-            { upsert: true, new: true }
-        );
+        for (const randomCommodity of selectedCommodities) {
+            const commodityFunction = validCommodities[randomCommodity];
 
-        res.json({ commodity: randomCommodity, data });
+            // Check for cached data
+            const cachedData = await Commodities.findOne({ commodity: randomCommodity, interval });
+            const oneDay = 24 * 60 * 60 * 1000;
+            const now = new Date();
+
+            if (cachedData && now - cachedData.updatedAt < oneDay) {
+                results.push({ commodity: randomCommodity, data: cachedData.data });
+                continue; // Skip the fetch if cached data is available
+            }
+
+            // Fetch data from the external API
+            const response = await fetch(`https://www.alphavantage.co/query?function=${commodityFunction}&interval=${interval}&apikey=${apiKey}`);
+            const data = await response.json();
+
+            // Cache the fetched data
+            await Commodities.findOneAndUpdate(
+                { commodity: randomCommodity, interval },
+                { data, updatedAt: new Date() },
+                { upsert: true, new: true }
+            );
+
+            results.push({ commodity: randomCommodity, data }); // Add the new data to results
+        }
+
+        res.json(results); // Return the array of commodities
     } catch (error) {
-        res.status(500).json({ error: "Error fetching random commodity data." });
+        console.error("Error fetching random commodities:", error); // Log the error for debugging
+        res.status(500).json({ error: "Error fetching random commodities data." });
     }
 });
+
 
 module.exports = router;
