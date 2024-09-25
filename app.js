@@ -15,6 +15,30 @@ require('./config')(app)
 const indexRoutes = require('./routes/publicRoutes/index.routes')
 app.use('/api', indexRoutes)
 
+const stockRoutes = require('./routes/publicRoutes/stock.routes')
+app.use('/stock', stockRoutes)
+
+const cryptoRoutes = require('./routes/publicRoutes/crypto.routes')
+app.use('/crypto', cryptoRoutes)
+
+const indicatorsRoutes = require('./routes/publicRoutes/indicators.routes')
+app.use('/indicators', indicatorsRoutes)
+
+const commoditiesRoutes = require('./routes/publicRoutes/commodities.routes')
+app.use('/commodities', commoditiesRoutes)
+
+const technicalIndicatorsRoutes = require('./routes/publicRoutes/technicalndicators.routes')
+app.use('/technical-indicators', technicalIndicatorsRoutes)
+
+const portfolioRoutes = require("./routes/privateRoutes/portfolio.routes")
+app.use("/portfolio", portfolioRoutes)
+
+const wishlistRoutes = require("./routes/privateRoutes/transactions.routes")
+app.use("/wishlist", wishlistRoutes)
+
+const transactionsRoutes = require("./routes/privateRoutes/transactions.routes")
+app.use("/transactions", transactionsRoutes)
+
 const authRoutes = require("./routes/privateRoutes/auth.routes")
 app.use('/auth', authRoutes)
 

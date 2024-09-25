@@ -60,4 +60,56 @@ router.get("/price/:commodity/:interval", async (req, res) => {
     }
 });
 
+router.get("/search", async (req, res) => {
+    const { query } = req.query;
+
+    if (!query) return res.status(400).json({ error: "Query parameter is required" })
+
+    const matchingCommodities = Object.keys(validCommodities).filter(commodityKey =>
+        commodityKey.includes(query.toLowerCase())
+    );
+
+    if (matchingCommodities.length === 0) {
+        return res.status(404).json({ error: "No matching commodities found." });
+    }
+
+    // Devuelve los commodities coincidentes
+    res.json(matchingCommodities);
+})
+
+router.get("/random-commodity", async (req, res) => {
+    try {
+        // Elegimos una commodity y un intervalo aleatorios
+        const commodityKeys = Object.keys(validCommodities);
+        const randomCommodity = commodityKeys[Math.floor(Math.random() * commodityKeys.length)];
+        const interval = "daily"; // Puedes hacer esto aleatorio si lo prefieres
+
+        const commodityFunction = validCommodities[randomCommodity];
+
+        // Verificamos si hay datos en caché
+        const cachedData = await Commodities.findOne({ commodity: randomCommodity, interval });
+        const oneDay = 24 * 60 * 60 * 1000;
+        const now = new Date();
+
+        if (cachedData && now - cachedData.updatedAt < oneDay) {
+            return res.json({ commodity: randomCommodity, data: cachedData.data });
+        }
+
+        // Hacemos la petición a la API externa
+        const response = await fetch(`https://www.alphavantage.co/query?function=${commodityFunction}&interval=${interval}&apikey=${apiKey}`);
+        const data = await response.json();
+
+        // Guardamos en caché y enviamos la respuesta
+        await Commodities.findOneAndUpdate(
+            { commodity: randomCommodity, interval },
+            { data, updatedAt: new Date() },
+            { upsert: true, new: true }
+        );
+
+        res.json({ commodity: randomCommodity, data });
+    } catch (error) {
+        res.status(500).json({ error: "Error fetching random commodity data." });
+    }
+});
+
 module.exports = router;
