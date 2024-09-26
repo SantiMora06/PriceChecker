@@ -1,19 +1,35 @@
-const router = require("express").Router()
+const router = require("express").Router();
 const apiKey = process.env.apiKey;
-const Crypto = require("../../models/CryptoData.model")
+const Crypto = require("../../models/CryptoData.model");
+const fs = require("fs")
+const path = require("path")
 
+const loadCryptos = () => {
+    const csvPath = path.join(__dirname, "../../data/digital_currency_list.csv")
+    const csvData = fs.readFileSync(csvPath, "utf8")
+    const lines = csvData.split("\n")
+
+    const cryptos = lines.slice(1).map(line => {
+        const [symbol] = line.split(",")
+        return symbol.trim()
+    });
+    return cryptos.filter(crypto => crypto)
+}
 
 const fetchData = async (timeFrame, symbol, market, apiKey) => {
     const url = `https://www.alphavantage.co/query?function=DIGITAL_CURRENCY_${timeFrame.toUpperCase()}&symbol=${symbol}&market=${market}&apikey=${apiKey}`;
     const response = await fetch(url);
+    if (!response.ok) throw new Error("Failed to fetch data from Alpha Vantage");
     return response.json();
 };
 
+// Ruta para obtener el tipo de cambio de divisas
 router.get('/:from_currency-:to_currency', async (req, res) => {
-    const { from_currency, to_currency } = req.params
+    const { from_currency, to_currency } = req.params;
 
     try {
         const response = await fetch(`https://www.alphavantage.co/query?function=CURRENCY_EXCHANGE_RATE&from_currency=${from_currency}&to_currency=${to_currency}&apikey=${apiKey}`);
+        if (!response.ok) throw new Error("Failed to fetch currency exchange rate");
         const data = await response.json();
         res.json(data);
     } catch (error) {
@@ -21,7 +37,7 @@ router.get('/:from_currency-:to_currency', async (req, res) => {
     }
 });
 
-// Route for fetching cryptocurrency data
+// Ruta para obtener datos de criptomonedas
 router.get('/:timeFrame/:symbol-:market', async (req, res) => {
     const { timeFrame, symbol, market } = req.params;
 
@@ -31,27 +47,48 @@ router.get('/:timeFrame/:symbol-:market', async (req, res) => {
     }
 
     try {
-
         const cachedCrypto = await Crypto.findOne({ symbol, market, timeFrame });
 
         const oneDay = 24 * 60 * 60 * 1000;
         const now = new Date();
 
+        // Verificar si hay datos en caché
         if (cachedCrypto && now - cachedCrypto.updatedAt < oneDay) {
-            return res.json(cachedCrypto.data)
+            return res.json(cachedCrypto.data);
         }
 
+        // Obtener datos de la API externa
         const data = await fetchData(timeFrame, symbol, market, apiKey);
 
+        // Guardar en caché
         await Crypto.findOneAndUpdate(
             { symbol, market, timeFrame },
             { data, updatedAt: new Date() },
             { upsert: true, new: true }
-        )
+        );
 
         res.json(data);
     } catch (error) {
+        console.error(error); // Para depuración
         res.status(500).json({ error: 'Error fetching data from Alpha Vantage' });
     }
 });
+
+// Ruta para obtener criptomonedas aleatorias
+router.get('/random-cryptos', async (req, res) => {
+
+    const cryptos = loadCryptos();
+    const results = [];
+
+    for (let i = 0; i < 5; i++) {
+        const randomIndex = Math.floor(Math.random() * cryptos.length);
+        const symbol = cryptos[randomIndex]
+
+
+        const data = await fetchData("daily", symbol, "EUR", apiKey);
+        results.push(data)
+    }
+    res.json(results)
+});
+
 module.exports = router;
