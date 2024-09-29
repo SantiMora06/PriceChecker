@@ -9,6 +9,12 @@ const validParams = {
     maturity: ["3month", "2year", "5year", "7year", "10year", "30year"]
 };
 
+const randomInterval1 = validParams.interval1[Math.floor(Math.random * validParams.interval1.length)];
+const randomInterval2 = validParams.interval2[Math.floor(Math.random * validParams.interval2.length)];
+const randomInterval3 = validParams.interval3[Math.floor(Math.random * validParams.interval3.length)];;
+const maturitys = validParams.maturity[Math.floor(Math.random * validParams.maturity.length)];;
+
+
 const fetchFromAlphaVantage = async (functionType, params = '') => {
     try {
         const url = `https://www.alphavantage.co/query?function=${functionType}&${params}&apikey=${apiKey}`;
@@ -77,5 +83,7 @@ router.get("/retail-sales", createRouteHandler('RETAIL_SALES', { interval: [] })
 router.get("/durables", createRouteHandler('DURABLES', { interval: [] }))
 router.get("/unemployment", createRouteHandler('UNEMPLOYMENT', { interval: [] }))
 router.get("/nonfarm-payroll", createRouteHandler('NONFARM_PAYROLL', { interval: [] }))
+router.get("/random-indicators", createRouteHandler("REAL_GDP_PER_CAPITA" || "INFLATION" || "RETAIL_SALES" || "DURABLES" || "UNEMPLOYMENT" || "NONFARM_PAYROLL",
+    { interval: randomInterval1 || randomInterval2 || randomInterval3, maturity: maturitys }))
 
 module.exports = router;

@@ -1,20 +1,9 @@
 const router = require("express").Router();
 const apiKey = process.env.apiKey;
 const Crypto = require("../../models/CryptoData.model");
-const fs = require("fs")
-const path = require("path")
 
-const loadCryptos = () => {
-    const csvPath = path.join(__dirname, "../../data/digital_currency_list.csv")
-    const csvData = fs.readFileSync(csvPath, "utf8")
-    const lines = csvData.split("\n")
-
-    const cryptos = lines.slice(1).map(line => {
-        const [symbol] = line.split(",")
-        return symbol.trim()
-    });
-    return cryptos.filter(crypto => crypto)
-}
+const testCrypto = ["BTC", "ETH", "ADA", "SOL", "DOT"];
+const randomCryptos = testCrypto[Math.floor(Math.random() * testCrypto.length)];
 
 const fetchData = async (timeFrame, symbol, market, apiKey) => {
     const url = `https://www.alphavantage.co/query?function=DIGITAL_CURRENCY_${timeFrame.toUpperCase()}&symbol=${symbol}&market=${market}&apikey=${apiKey}`;
@@ -76,19 +65,14 @@ router.get('/:timeFrame/:symbol-:market', async (req, res) => {
 
 // Ruta para obtener criptomonedas aleatorias
 router.get('/random-cryptos', async (req, res) => {
-
-    const cryptos = loadCryptos();
-    const results = [];
-
-    for (let i = 0; i < 5; i++) {
-        const randomIndex = Math.floor(Math.random() * cryptos.length);
-        const symbol = cryptos[randomIndex]
-
-
-        const data = await fetchData("daily", symbol, "EUR", apiKey);
-        results.push(data)
+    try {
+        const response = await fetch(`https://www.alphavantage.co/query?function=CURRENCY_EXCHANGE_RATE&from_currency=${randomCryptos}&to_currency=USD&apikey=${apiKey}`)
+        console.log(response)
+        const data = response.json()
+        res.json(data)
+    } catch (error) {
+        res.status(500).json({ error: "Error:" })
     }
-    res.json(results)
 });
 
 module.exports = router;
