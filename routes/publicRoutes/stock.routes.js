@@ -1,132 +1,132 @@
 const router = require('express').Router();
 const apiKey = process.env.apiKey;
-const Stock = require("../../models/Stock.model")
 
 // Creamos una función que nos ayude a coger los datos desde la API de Alpha Vantage y centralizarlos. 
 
-const fetchFromAlphaVantage = async (functionType, params = '') => {
+
+// Create a general Search out of this URL
+// https://financialmodelingprep.com/api/v3/search?query=AA&apikey=zNgZW1xV8xnjHKlwG68JlUNqotDhrMab
+
+
+let stockSymbols = [];
+
+// Fetch stock symbols on server startup
+const fetchStock = async () => {
     try {
-        const url = `https://www.alphavantage.co/query?function=${functionType}&${params}&apikey=${apiKey}`;
-        const response = await fetch(url);
-        if (!response.ok) throw new Error('Network response was not ok');
-        return await response.json();
-    } catch (error) {
-        throw new Error('Error fetching data from Alpha Vantage');
-    }
-};
-
-// Creamos una función que nos ayude con el resto de rutas que no tienen símbolos.
-
-const handleAlphaVantageRequest = async (res, apiFunction, params = "") => {
-    try {
-        // Pedimos a la api que nos de el resultado de la ApiFunction y que los parámetros sean una string vacía;
-        const data = await fetchFromAlphaVantage(apiFunction, params);
-        res.json(data)
-    } catch (error) {
-        res.status(500).json({ error: error.message })
-    }
-}
-/* Creamos una función para que nos ayude con parámetros específicos como from_symbol y to_symbol;
-En este caso, from_symbol y to_symbol serían llamados por el req.params, ya que estos son valores dinámicos-
-Llama a la API y le pasa la function Type y los parámetros `from_symbol=${from_symbol}&to_symbol=${to_symbol}` */
-const handleFromSymbolToSymbol = (functionType) => async (req, res) => {
-    const { from_symbol, to_symbol } = req.params;
-    const params = `from_symbol=${from_symbol}&to_symbol=${to_symbol}`
-    try {
-        const data = await fetchFromAlphaVantage(functionType, params);
-        res.json(data)
-    } catch (error) {
-        res.status(500).json({ error: error.message })
-    }
-}
-
-// Definimos con una función dinámica un gestor de rutas y, más tarde, solo necesitamos añadir el nombre de la función como por ejemplo 'TIME_SERIES_DAILY'
-const createRouteHandler = (functionType) => async (req, res) => {
-    const symbol = req.params.symbol || '';
-    const params = symbol ? `symbol=${symbol}` : '';
-
-    console.log("Query params", { symbol, functionType });
-
-    try {
-        // Declaramos una variable que haga de caché. Espera y encuentra un Stock que tenga un símbolo y una función determinada.
-        const cachedStock = await Stock.findOne({ symbol, functionType });
-        console.log("Cached Stock:", cachedStock)
-
-        const oneDay = 24 * 60 * 60 * 1000;
-        const now = new Date();
-
-        // Si existe y fue actualizado en las últimas 24 horas, devolvemos el símbolo
-        if (cachedStock && now - cachedStock.updatedAt < oneDay) {
-            console.log("Returning cached data for", { symbol, functionType })
-            return res.json(cachedStock.data)
+        const response = await fetch(`https://financialmodelingprep.com/api/v3/stock/list?apikey=${apiKey}`);
+        const data = await response.json();
+        if (Array.isArray(data)) {
+            stockSymbols = data; // Store the fetched stock data
+        } else {
+            console.log("Unexpected response format:", data);
         }
-
-        // Si no existe o fue consultado hace más de 24 horas, hacemos la petición a la API
-        const data = await fetchFromAlphaVantage(functionType, params);
-        console.log("Fetched Data", data)
-
-        // Guardamos o actualizamos el símbolo en la base de datos
-        const savedStock = await Stock.findOneAndUpdate(
-            { symbol, functionType },
-            { data, updatedAt: new Date() },
-            { upsert: true, new: true })
-        //Devolvemos todos los datos actualizados
-        console.log("Saved Stock", savedStock)
-        res.json(data);
     } catch (error) {
-        console.log("Error handling Alpha Vantage request:", error)
-        res.status(500).json({ error: error.message });
+        console.error("Error while fetching stock:", error);
     }
 };
+fetchStock();
 
-// Definimos todas las rutas rutas posibles
-router.get('/daily/:symbol', createRouteHandler('TIME_SERIES_DAILY'));
-router.get('/weekly/:symbol', createRouteHandler('TIME_SERIES_WEEKLY'));
-router.get('/weekly-adjusted/:symbol', createRouteHandler('TIME_SERIES_WEEKLY_ADJUSTED'));
-router.get('/monthly/:symbol', createRouteHandler('TIME_SERIES_MONTHLY'));
-router.get('/monthly-adjusted/:symbol', createRouteHandler('TIME_SERIES_MONTHLY_ADJUSTED'));
-router.get('/last-price-and-volume/:symbol', createRouteHandler('GLOBAL_QUOTE'));
-router.get('/overview/:symbol', createRouteHandler('OVERVIEW'));
-router.get('/etf/:symbol', createRouteHandler('ETF_PROFILE'));
-router.get('/dividends/:symbol', createRouteHandler('DIVIDENDS'));
-router.get('/split/:symbol', createRouteHandler('SPLITS'));
-router.get('/income-statement/:symbol', createRouteHandler('INCOME_STATEMENT'));
-router.get('/balance/:symbol', createRouteHandler('BALANCE_SHEET'));
-router.get('/cash-flow/:symbol', createRouteHandler('CASH_FLOW'));
-router.get('/earnings/:symbol', createRouteHandler('EARNINGS'));
-router.get('/historical/:symbol', createRouteHandler('HISTORICAL_OPTIONS'));
-
-// Aquí queremos buscar las keywords, por lo que pedimos a la API que nos busque la palabra clave y cambia dinámicamente.
-router.get('/search/:keywords', async (req, res) => {
+// Stock list endpoint
+router.get("/stock/list", async (req, res) => {
     try {
-        const data = await fetchFromAlphaVantage('SYMBOL_SEARCH', `keywords=${req.params.keywords}`);
-        res.json(data);
+        res.json(stockSymbols);
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ Error: "Error while fetching the stock list" });
     }
 });
 
-router.get('/market-status', (req, res) => {
-    handleAlphaVantageRequest(res, "MARKET_STATUS")
-});
-
-router.get('/top-gainers', (req, res) => {
-    handleAlphaVantageRequest(res, "TOP_GAINERS_LOSERS")
-});
-
-router.get('/exchange-rate/:from_currency-:to_currency', async (req, res) => {
-    const { from_currency, to_currency } = req.params;
+// Endpoint for random stocks
+router.get("/random-stock", async (req, res) => {
     try {
-        const data = await fetchFromAlphaVantage('CURRENCY_EXCHANGE_RATE', `from_currency=${from_currency}&to_currency=${to_currency}`);
-        res.json(data);
+        if (stockSymbols.length < 5) return res.status(400).json({ Error: "Not enough stocks available" });
+        const randomStocks = stockSymbols.sort(() => 0.5 - Math.random()).slice(0, 5);
+        res.json(randomStocks);
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ Error: "Failed to fetch random stocks" });
     }
 });
 
+// ETF list endpoint
+router.get("/etf/list", async (req, res) => {
+    try {
+        const response = await fetch(`https://financialmodelingprep.com/api/v3/etf/list?apikey=${apiKey}`);
+        const data = await response.json();
+        res.json(data);
+    } catch (error) {
+        res.status(500).json({ Error: "Error while fetching the ETF list" });
+    }
+});
 
-router.get('/fx-daily/:from_symbol-:to_symbol', handleFromSymbolToSymbol("FX_DAILY"));
-router.get('/fx-weekly/:from_symbol-:to_symbol', handleFromSymbolToSymbol("FX_WEEKLY"));
-router.get('/fx-monthly/:from_symbol-:to_symbol', handleFromSymbolToSymbol("FX_MONTHLY"));
+// Stock profile by symbol
+router.get("/stock/:symbol", async (req, res) => {
+    const { symbol } = req.params;
+    try {
+        const response = await fetch(`https://financialmodelingprep.com/api/v3/profile/${symbol}?apikey=${apiKey}`);
+        const data = await response.json();
+        res.json(data);
+    } catch (error) {
+        res.status(500).json({ Error: "Error while fetching the stock profile" });
+    }
+});
+
+// Image by symbol
+router.get("/image/:symbol", async (req, res) => {
+    const { symbol } = req.params;
+    try {
+        const response = await fetch(`https://financialmodelingprep.com/image-stock/${symbol}.png?apikey=${apiKey}`);
+        const buffer = await response.arrayBuffer();
+        res.set("Content-Type", "image/png");
+        res.send(Buffer.from(buffer));
+    } catch (error) {
+        res.status(500).json({ Error: "Error while fetching the image of the asset" });
+    }
+});
+
+// Analyst recommendations
+router.get("/analyst-recommendations/:symbol", async (req, res) => {
+    const { symbol } = req.params;
+    try {
+        const response = await fetch(`https://financialmodelingprep.com/api/v3/analyst-stock-recommendations/${symbol}?apikey=${apiKey}`);
+        const data = await response.json();
+        res.json(data);
+    } catch (error) {
+        res.status(500).json({ Error: "Error while fetching analyst recommendations" });
+    }
+});
+
+// Company profile endpoint
+router.get("/profile/:symbol", async (req, res) => {
+    const { symbol } = req.params;
+    try {
+        const response = await fetch(`https://financialmodelingprep.com/api/v3/profile/${symbol}?apikey=${apiKey}`);
+        const data = await response.json();
+        res.json(data);
+    } catch (error) {
+        res.status(500).json({ Error: "Error while fetching the company's profile data" });
+    }
+});
+
+// Employee count endpoint
+router.get("/employee_count/:symbol", async (req, res) => {
+    const { symbol } = req.params;
+    try {
+        const response = await fetch(`https://financialmodelingprep.com/api/v3/historical/employee_count/${symbol}?apikey=${apiKey}`);
+        const data = await response.json();
+        res.json(data);
+    } catch (error) {
+        res.status(500).json({ Error: "Error while fetching the employee count" });
+    }
+});
+
+// Stock screener endpoint
+router.get("/stock-screener", async (req, res) => {
+    try {
+        const response = await fetch(`https://financialmodelingprep.com/api/v3/stock-screener?apikey=${apiKey}`);
+        const data = await response.json();
+        res.json(data);
+    } catch (error) {
+        res.status(500).json({ Error: "Error while fetching the stock screener data" });
+    }
+});
 
 module.exports = router;
