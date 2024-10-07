@@ -21,14 +21,11 @@ app.use('/stock', stockRoutes)
 const cryptoRoutes = require('./routes/publicRoutes/crypto.routes')
 app.use('/crypto', cryptoRoutes)
 
-const indicatorsRoutes = require('./routes/publicRoutes/indicators.routes')
-app.use('/indicators', indicatorsRoutes)
+const marketRoutes = require("./routes/publicRoutes/market.routes")
+app.use("/market", marketRoutes)
 
 const commoditiesRoutes = require('./routes/publicRoutes/commodities.routes')
 app.use('/commodities', commoditiesRoutes)
-
-const technicalIndicatorsRoutes = require('./routes/publicRoutes/technicalndicators.routes')
-app.use('/technical-indicators', technicalIndicatorsRoutes)
 
 const portfolioRoutes = require("./routes/privateRoutes/portfolio.routes")
 app.use("/portfolio", portfolioRoutes)

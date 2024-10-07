@@ -14,11 +14,11 @@ const fetchCryptos = async () => {
 router.get("/random-cryptos", async (req, res) => {
     try {
         const symbols = await fetchCryptos()
-        const responses = await Promise.all(symbols.map(symbol => fetch(`https://financialmodelingprep.com/api/v3/quote/${cypto.symbol}?apikey=${apiKey}`)))
+        const responses = await Promise.all(symbols.map(symbol => fetch(`https://financialmodelingprep.com/api/v3/quote/${symbol}?apikey=${apiKey}`)))
 
         const data = await Promise.all(responses.map(response => response.json()))
 
-        const combineData = data.map(crypto => ({ name: crypto.name, symbol: crypto.symbol, price: crypto.price }))
+        const combineData = data.flat().map(crypto => ({ name: crypto.name, symbol: crypto.symbol, price: crypto.price, exchangeRate: crypto.changesPercentage }))
 
         res.json({ quotes: combineData });
     } catch (error) {
@@ -36,5 +36,15 @@ router.get("/:symbol", async (req, res) => {
         res.status(500).json({ Error: `Failed to fetch ${symbol}` });
     }
 });
+
+router.get("/all-cryptos", async (req, res) => {
+    try {
+        const data = await fetch(`https://financialmodelingprep.com/api/v3/symbol/available-cryptocurrencies?apikey=${apiKey}`)
+        const response = await data.json()
+        res.json(response)
+    } catch (error) {
+        res.status(500).json({ Error: "Failed to fetch all cryptos" })
+    }
+})
 
 module.exports = router;

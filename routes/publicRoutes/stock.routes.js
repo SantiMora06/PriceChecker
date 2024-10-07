@@ -3,33 +3,25 @@ const apiKey = process.env.apiKey;
 
 // Creamos una función que nos ayude a coger los datos desde la API de Alpha Vantage y centralizarlos. 
 
-
-// Create a general Search out of this URL
-// https://financialmodelingprep.com/api/v3/search?query=AA&apikey=zNgZW1xV8xnjHKlwG68JlUNqotDhrMab
-
-
-let stockSymbols = [];
-
 // Fetch stock symbols on server startup
 const fetchStock = async () => {
-    try {
-        const response = await fetch(`https://financialmodelingprep.com/api/v3/stock/list?apikey=${apiKey}`);
-        const data = await response.json();
-        if (Array.isArray(data)) {
-            stockSymbols = data; // Store the fetched stock data
-        } else {
-            console.log("Unexpected response format:", data);
-        }
-    } catch (error) {
-        console.error("Error while fetching stock:", error);
-    }
+
+    const response = await fetch(`https://financialmodelingprep.com/api/v3/stock/list?apikey=${apiKey}`);
+    const data = await response.json();
+
+    const symbols = data
+        .filter(stock => stock.exchangeShortName === "NASDAQ")
+        .map(stock => stock.symbol)
+        .slice(0, 5)
+    return symbols;
 };
-fetchStock();
 
 // Stock list endpoint
 router.get("/stock/list", async (req, res) => {
     try {
-        res.json(stockSymbols);
+        const data = await fetch(`https://financialmodelingprep.com/api/v3/stock/list?apikey=${apiKey}`)
+        const response = await data.json();
+        res.json(response);
     } catch (error) {
         res.status(500).json({ Error: "Error while fetching the stock list" });
     }
@@ -38,9 +30,13 @@ router.get("/stock/list", async (req, res) => {
 // Endpoint for random stocks
 router.get("/random-stock", async (req, res) => {
     try {
-        if (stockSymbols.length < 5) return res.status(400).json({ Error: "Not enough stocks available" });
-        const randomStocks = stockSymbols.sort(() => 0.5 - Math.random()).slice(0, 5);
-        res.json(randomStocks);
+        const symbols = await fetchStock();
+        const datas = await Promise.all(symbols.map(symbol => fetch(`https://financialmodelingprep.com/api/v3/symbol/${symbol}?apikey=${apiKey}`)))
+        const response = await Promise.all(datas.map(data => data.json()))
+        console.log(response)
+        const combineData = response.map(stock => ({ name: stock.name, symbol: stock.symbol, price: stock.price }))
+        console.log(combineData)
+        res.json({ symbols: combineData })
     } catch (error) {
         res.status(500).json({ Error: "Failed to fetch random stocks" });
     }
