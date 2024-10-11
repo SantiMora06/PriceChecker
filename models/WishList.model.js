@@ -7,7 +7,7 @@ const WishlistSchema = new Schema({
         required: true
     },
     assets: [{
-        type: { type: String, enum: ["crypto", "stock", "commodity"], required: true },
+        type: { type: String, enum: ["crypto", "commodity"], required: true },
         symbol: { type: String, required: true },
         name: { type: String, required: true }
     },],

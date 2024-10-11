@@ -1,5 +1,7 @@
+require("dotenv").config();
 const router = require("express").Router();
 const apiKey = process.env.apiKey;
+
 
 const fetchCryptos = async () => {
 
@@ -9,7 +11,6 @@ const fetchCryptos = async () => {
     const symbols = response.map(crypto => crypto.symbol).slice(0, 5)
     return symbols;
 };
-
 
 router.get("/random-cryptos", async (req, res) => {
     try {
@@ -39,8 +40,9 @@ router.get("/:symbol", async (req, res) => {
 
 router.get("/all-cryptos", async (req, res) => {
     try {
-        const data = await fetch(`https://financialmodelingprep.com/api/v3/symbol/available-cryptocurrencies?apikey=${apiKey}`)
+        const data = await fetch(`https://financialmodelingprep.com/api/v3/symbol/available-cryptocurrencies?apikey=${apiKey}`);
         const response = await data.json()
+        console.log(response)
         res.json(response)
     } catch (error) {
         res.status(500).json({ Error: "Failed to fetch all cryptos" })

@@ -15,9 +15,6 @@ require('./config')(app)
 const indexRoutes = require('./routes/publicRoutes/index.routes')
 app.use('/api', indexRoutes)
 
-const stockRoutes = require('./routes/publicRoutes/stock.routes')
-app.use('/stock', stockRoutes)
-
 const cryptoRoutes = require('./routes/publicRoutes/crypto.routes')
 app.use('/crypto', cryptoRoutes)
 

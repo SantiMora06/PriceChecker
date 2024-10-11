@@ -5,7 +5,7 @@ const InvestmentsSchema = new Schema(
     {
         type: {
             type: String,
-            enum: ["stock", "crypto", "commodity"],
+            enum: ["crypto", "commodity"],
         },
         symbol: {
             type: String,
