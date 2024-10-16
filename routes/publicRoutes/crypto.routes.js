@@ -12,11 +12,19 @@ const fetchCryptos = async () => {
     return symbols;
 };
 
+const fetchAllCryptos = async () => {
+    const data = await fetch(`https://financialmodelingprep.com/api/v3/symbol/available-cryptocurrencies?apikey=${apiKey}`)
+    const response = await data.json();
+    console.log(response);
+    const symbols = response.map(crypto => crypto.symbol).slice(0, 10)
+    return symbols;
+}
+
 router.get("/random-cryptos", async (req, res) => {
     try {
         const symbols = await fetchCryptos()
         const responses = await Promise.all(symbols.map(symbol => fetch(`https://financialmodelingprep.com/api/v3/quote/${symbol}?apikey=${apiKey}`)))
-
+        console.log(responses)
         const data = await Promise.all(responses.map(response => response.json()))
 
         const combineData = data.flat().map(crypto => ({ name: crypto.name, symbol: crypto.symbol, price: crypto.price, exchangeRate: crypto.changesPercentage }))
@@ -40,12 +48,16 @@ router.get("/:symbol", async (req, res) => {
 
 router.get("/all-cryptos", async (req, res) => {
     try {
-        const data = await fetch(`https://financialmodelingprep.com/api/v3/symbol/available-cryptocurrencies?apikey=${apiKey}`);
-        const response = await data.json()
-        console.log(response)
-        res.json(response)
+        const symbols = await fetchAllCryptos()
+        const responses = await Promise.all(symbols.map(symbol => fetch(`https://financialmodelingprep.com/api/v3/quote/${symbol}?apikey=${apiKey}`)))
+
+        const data = await Promise.all(responses.map(response => response.json()))
+
+        const combineData = data.flat().map(crypto => ({ name: crypto.name, symbol: crypto.symbol, price: crypto.price, exchangeRate: crypto.changesPercentage }))
+
+        res.json({ quotes: combineData });
     } catch (error) {
-        res.status(500).json({ Error: "Failed to fetch all cryptos" })
+        res.status(500).json({ Error: "Failed to fetch all cryptos" });
     }
 })
 
